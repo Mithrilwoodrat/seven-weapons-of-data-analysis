@@ -1,3 +1,5 @@
+.DS_Store
+stream2es
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
