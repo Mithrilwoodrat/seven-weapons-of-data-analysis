@@ -1,55 +1,53 @@
 {
-        "properties" : {
-          "agent" : {
-            "type" : "text",
-            "fields" : {
-              "keyword" : {
-                "type" : "keyword",
-                "ignore_above" : 256
-              }
-            }
-          },
-          "bytes" : {
-            "type" : "long"
-          },
-          "referrer" : {
-            "type" : "text",
-            "fields" : {
-              "keyword" : {
-                "type" : "keyword",
-                "ignore_above" : 256
-              }
-            }
-          },
-          "remote_ip" : {
-            "type" : "ip"
-          },
-          "remote_user" : {
-            "type" : "text",
-            "fields" : {
-              "keyword" : {
-                "type" : "keyword",
-                "ignore_above" : 256
-              }
-            }
-          },
-          "request" : {
-            "type" : "text",
-            "fields" : {
-              "keyword" : {
-                "type" : "keyword",
-                "ignore_above" : 256
-              }
-            }
-          },
-          "response" : {
-            "type" : "long"
-          },
-          "time" : {
-            "type" : "date"
+    "properties" : {
+      "agent" : {
+        "type" : "text",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
           }
         }
+      },
+      "bytes" : {
+        "type" : "long"
+      },
+      "referrer" : {
+        "type" : "text",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "remote_ip" : {
+        "type" : "ip"
+      },
+      "remote_user" : {
+        "type" : "text",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "request" : {
+        "type" : "text",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "response" : {
+        "type" : "long"
+      },
+      "time" : {
+        "type" : "date",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis||dd/MMM/yyyy:HH:mm:ss Z"
       }
     }
-  }
 }
