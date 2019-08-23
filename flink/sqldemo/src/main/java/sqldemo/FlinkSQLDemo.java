@@ -31,8 +31,9 @@ public class FlinkSQLDemo {
 
     public static void main(String[] args) throws Exception {
 
-        StreamExecutionEnvironment see = StreamExecutionEnvironment.getExecutionEnvironment();
-
+        //StreamExecutionEnvironment see = StreamExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment see = StreamExecutionEnvironment.createLocalEnvironment();
+        see.setParallelism(1);
         DataStream<WikipediaEditEvent> edits = see.addSource(new WikipediaEditsSource());
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -50,35 +51,37 @@ public class FlinkSQLDemo {
                 }).assignTimestampsAndWatermarks(extractor);
 
         // Register it so we can use it in SQL
-        tableEnv.registerDataStream("sensors", dataset, "user, count, rowtime.rowtime");
+        tableEnv.registerDataStream("sensors", dataset, "user, wordcount, timestamp, proctime.proctime");
 
-        String query = "SELECT room, TUMBLE_END(rowtime, INTERVAL '10' SECOND), AVG(temperature) AS avgTemp FROM sensors GROUP BY TUMBLE(rowtime, INTERVAL '10' SECOND), room";
-        Table table = tableEnv.sql(query);
+        String query = "SELECT user, SUM(wordcount) AS total,  TUMBLE_END(proctime, INTERVAL '10' SECOND) FROM sensors GROUP BY TUMBLE(proctime, INTERVAL '10' SECOND), user";
+        Table table = tableEnv.sqlQuery(query); // https://flink.sojb.cn/dev/table/sql.html 1.7 中修改为 .sqlQuery
 
         // Just for printing purposes, in reality you would need something other than Row
-        tableEnv.toAppendStream(table, Row.class).print();
+        DataStream<Row> stream = tableEnv.toAppendStream(table, Row.class);
 
-        env.execute();
+        stream.print();
+        env.execute("print job");
+        System.out.println(env.getExecutionPlan());
     }
 
     // Data type for words with count
     public static class WikiUserCount {
 
         public String user;
-        public int count;
+        public int wordcount;
         public long timestamp;
 
         public WikiUserCount() {}
 
         public WikiUserCount(String user, int count, long timestamp) {
             this.user = user;
-            this.count = count;
+            this.wordcount = count;
             this.timestamp = timestamp;
         }
 
         @Override
         public String toString() {
-            return user + " : " + count;
+            return user + " : " + wordcount;
         }
     }
 }
