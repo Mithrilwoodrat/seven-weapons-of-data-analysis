@@ -5,10 +5,13 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableEnvironment;
+import org.apache.flink.table.api.Types;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -18,6 +21,8 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.wikiedits.WikipediaEditEvent;
 import org.apache.flink.streaming.connectors.wikiedits.WikipediaEditsSource;
 import org.apache.flink.api.java.io.TextInputFormat;
+
+import java.sql.Timestamp;
 
 public class FlinkSQLDemo {
 
@@ -32,11 +37,10 @@ public class FlinkSQLDemo {
     public static void main(String[] args) throws Exception {
 
         //StreamExecutionEnvironment see = StreamExecutionEnvironment.getExecutionEnvironment();
-        StreamExecutionEnvironment see = StreamExecutionEnvironment.createLocalEnvironment();
-        see.setParallelism(1);
-        DataStream<WikipediaEditEvent> edits = see.addSource(new WikipediaEditsSource());
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
+        env.setParallelism(1);
+        DataStream<WikipediaEditEvent> edits = env.addSource(new WikipediaEditsSource());
 
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -56,10 +60,20 @@ public class FlinkSQLDemo {
         String query = "SELECT user, SUM(wordcount) AS total,  TUMBLE_END(proctime, INTERVAL '10' SECOND) FROM sensors GROUP BY TUMBLE(proctime, INTERVAL '10' SECOND), user";
         Table table = tableEnv.sqlQuery(query); // https://flink.sojb.cn/dev/table/sql.html 1.7 中修改为 .sqlQuery
 
-        // Just for printing purposes, in reality you would need something other than Row
-        DataStream<Row> stream = tableEnv.toAppendStream(table, Row.class);
+        // convert to datastream https://ci.apache.org/projects/flink/flink-docs-release-1.7/dev/table/common.html#integration-with-datastream-and-dataset-api
 
-        stream.print();
+        TupleTypeInfo<Tuple3<String, Integer, Timestamp>> tupleType = new TupleTypeInfo<>(
+                Types.STRING(),
+                Types.INT(),
+                Types.SQL_TIMESTAMP());
+        DataStream<Tuple3<String, Integer, Timestamp>> dsTuple =
+                tableEnv.toAppendStream(table, tupleType);
+
+        dsTuple.print();
+        // Just for printing purposes, in reality you would need something other than Row
+        //DataStream<WikiUserCount> stream = tableEnv.toAppendStream(table, WikiUserCount.class);
+
+        //stream.print();
         env.execute("print job");
         System.out.println(env.getExecutionPlan());
     }
