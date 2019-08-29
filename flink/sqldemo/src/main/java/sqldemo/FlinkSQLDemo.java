@@ -74,8 +74,8 @@ public class FlinkSQLDemo {
         //DataStream<WikiUserCount> stream = tableEnv.toAppendStream(table, WikiUserCount.class);
 
         //stream.print();
-        env.execute("print job");
         System.out.println(env.getExecutionPlan());
+        env.execute("print job");
     }
 
     // Data type for words with count
